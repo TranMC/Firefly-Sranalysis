@@ -24,7 +24,7 @@ export async function checkConnectTcpApi(): Promise<boolean> {
 
 export async function getCharacterListApi(): Promise<CharacterBasic[]> {
     try {
-        const res = await axios.get<CharacterBasic[]>("/data/character.json");
+        const res = await axios.get<CharacterBasic[]>("/api/data/avatar_basic");
         return res.data
     } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
@@ -38,7 +38,7 @@ export async function getCharacterListApi(): Promise<CharacterBasic[]> {
 
 export async function getEnemyListApi(): Promise<MonsterBasic[]> {
     try {
-        const res = await axios.get<MonsterBasic[]>("/data/monster.json");
+        const res = await axios.get<MonsterBasic[]>("/api/data/monster_basic");
         return res.data
     } catch (error: unknown) {
         if (axios.isAxiosError(error)) {

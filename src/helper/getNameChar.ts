@@ -5,6 +5,11 @@ import { useTranslations } from "next-intl";
 
 type TFunc = ReturnType<typeof useTranslations>
 
+function cleanText(text: string): string {
+  if (!text) return ""
+  return text.replace(/<unbreak>(.*?)<\/unbreak>/g, "$1")
+}
+
 export function getNameChar(
   locale: string,
   t: TFunc,
@@ -28,7 +33,7 @@ export function getNameChar(
     text = `${t("trailblazer")} • ${t(data?.baseType?.toLowerCase() ?? "")}`;
   }
 
-  return text;
+  return cleanText(text);
 }
 
 export function getNameEnemy(locale: string, data: MonsterBasic | undefined): string {
