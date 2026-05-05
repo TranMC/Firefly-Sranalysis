@@ -51,7 +51,7 @@ export default function Home() {
       setMapEnemy(monsterMap)
     };
     fetchData();
-  }, [setListAvatar, setListEnemy]);
+  }, [setListAvatar, setListEnemy, setMapAvatar, setMapEnemy]);
 
   useEffect(() => {
     window.dispatchEvent(new Event('resize'));

@@ -3,12 +3,15 @@ import { EntityType } from "./entity";
 export interface DamageType {
     attacker: EntityType;
     damage: number;
-    damage_type?: AttackType
+    overkill_damage?: number;
+    damage_type?: AttackType | string;
+    type?: AttackType | string;
 }
 
 export interface DamageDetailType {
     damage: number;
-    damage_type?: AttackType
+    overkill_damage?: number;
+    damage_type?: AttackType;
 }
 
 
@@ -30,10 +33,53 @@ export enum AttackType {
     ElationDamage = 14
 }
 
+
+const attackTypeMap: Record<string, AttackType> = {
+    Talent: AttackType.Unknown,
+    Basic: AttackType.Normal,
+    Skill: AttackType.BPSkill,
+    Ultimate: AttackType.Ultra,
+    QTE: AttackType.QTE,
+    DOT: AttackType.DOT,
+    DoT: AttackType.DOT,
+    Pursued: AttackType.Pursued,
+    Additional: AttackType.Pursued,
+    Technique: AttackType.Maze,
+    MazeNormal: AttackType.MazeNormal,
+    "Follow-up": AttackType.Insert,
+    "Follow-Up": AttackType.Insert,
+    "Elemental Damage": AttackType.ElementDamage,
+    Break: AttackType.ElementDamage,
+    Level: AttackType.Level,
+    Servant: AttackType.Servant,
+    "True Damage": AttackType.TrueDamage,
+    True: AttackType.TrueDamage,
+    "Elation Damage": AttackType.ElationDamage,
+    Elation: AttackType.ElationDamage,
+};
+
+export function ParseAttackType(type: AttackType | string | undefined): AttackType {
+    if (type === undefined || type === null) {
+        return AttackType.Unknown;
+    }
+
+    if (typeof type === "number") {
+        return type in AttackType ? type : AttackType.Unknown;
+    }
+
+    const num = Number(type);
+    if (!isNaN(num)) {
+        return num in AttackType ? num as AttackType : AttackType.Unknown;
+    }
+
+    return attackTypeMap[type] ?? AttackType.Unknown;
+}
+
 export function attackTypeToString(type: AttackType | undefined): string {
     if (type === undefined) {
         return ""
     }
+
     switch (type) {
         case AttackType.Unknown: return "Talent";
         case AttackType.Normal: return "Basic";

@@ -1,10 +1,14 @@
 import { StatsType } from "./stat";
 
+export interface BattleStatsType {
+    properties: Record<string, number>;
+}
+
 export interface EnemyType {
     id: number;
     uid: number;
     name: string;
-    base_stats: StatsType
+    base_stats: BattleStatsType | StatsType;
 }
 
 export interface InitializeEnemyType {

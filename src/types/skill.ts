@@ -4,7 +4,7 @@ import { EntityType } from "./entity";
 
 export interface SkillInfo {
     name: string;
-    type: AttackType;
+    type: AttackType | string;
     skill_config_id: number;
 }
 

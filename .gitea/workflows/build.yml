@@ -8,17 +8,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check out latest code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Stop and remove old containers
+      - name: Deploy to Container
         run: |
-          docker compose down || true
-
-      - name: Remove unused Docker resources
-        run: |
-          docker system prune -a --volumes -f
-
-      - name: Build and restart containers
-        run: |
-          docker compose up -d
+          docker compose up -d --build --remove-orphans

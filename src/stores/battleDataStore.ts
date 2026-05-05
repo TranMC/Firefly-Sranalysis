@@ -1,4 +1,4 @@
-import { DamageType, AvatarAnalysisJson, UseSkillType, BattleBeginType, BattleEndType, DamageDetailType, EntityDefeatedType, SetBattleLineupType, TurnBeginType, TurnEndType, UpdateCycleType, UpdateWaveType, VersionType, StatChangeType, UpdateTeamFormationType, Team } from '@/types';
+import { DamageType, AvatarAnalysisJson, UseSkillType, BattleBeginType, BattleEndType, DamageDetailType, EntityDefeatedType, SetBattleLineupType, TurnBeginType, TurnEndType, UpdateCycleType, UpdateWaveType, VersionType, StatChangeType, UpdateTeamFormationType, Team, ParseAttackType } from '@/types';
 import { InitializeEnemyType } from '@/types/enemy';
 import { AvatarBattleInfo, AvatarInfo, BattleDataStateJson, EnemyInfo, SkillBattleInfo, TurnBattleInfo } from '@/types/mics';
 import { create } from 'zustand'
@@ -54,10 +54,19 @@ const useBattleDataStore = create<BattleDataState>((set, get) => ({
     avatarDetail: undefined,
     enemyDetail: undefined,
     loadBattleDataFromJSON: (data: BattleDataStateJson) => {
+        const skillHistory = data.skillHistory.map(it => {
+            it.damageDetail = it.damageDetail.map(it => {
+                return {
+                    ...it,
+                    damage_type: ParseAttackType(it.damage_type)
+                }
+            })
+            return it
+        })
         set({
             lineup: data.lineup,
             turnHistory: data.turnHistory,
-            skillHistory: data.skillHistory,
+            skillHistory: skillHistory,
             dataAvatar: data.dataAvatar,
             totalAV: data.totalAV,
             totalDamage: data.totalDamage,
@@ -82,47 +91,49 @@ const useBattleDataStore = create<BattleDataState>((set, get) => ({
         })
     },
     onBattleBeginService: (data: BattleBeginType) => {
-        const current = get()
-        const updatedHistory = current.turnHistory.map(it => ({
-            ...it,
-            cycleIndex: data.max_cycles
-        }))
         set({
             maxWave: data.max_waves,
-            maxCycle: data.max_cycles,
-            turnHistory: updatedHistory
+            maxCycle: data.max_cycles
         })
     },
+
     onSetBattleLineupService: (data: SetBattleLineupType) => {
         const lineups: AvatarBattleInfo[] = []
         for (const avatar of data.avatars) {
             lineups.push({ avatarId: avatar.id, isDie: false } as AvatarBattleInfo)
         }
-        set((state) => ({
+        set(() => ({
             lineup: lineups,
             turnHistory: [{
                 avatarId: -1,
                 actionValue: 0,
                 waveIndex: 1,
-                cycleIndex: state.maxCycle,
+                cycleIndex: 0,
             } as TurnBattleInfo],
             skillHistory: [],
             totalAV: 0,
             totalDamage: 0,
             damagePerAV: 0,
-            cycleIndex: state.maxCycle,
+            cycleIndex: 0,
+            maxWave: Infinity,
+            maxCycle: Infinity,
             waveIndex: 1,
         }));
     },
+
     onDamageService: (data: DamageType) => {
         const skillHistory = get().skillHistory
-        
+
         const skillIdx = skillHistory.findLastIndex(it => it.avatarId === data.attacker.uid)
         if (skillIdx === -1) {
             return
         }
         const newTh = [...skillHistory]
-        newTh[skillIdx].damageDetail.push({damage: data.damage, damage_type: data?.damage_type} as DamageDetailType)
+        newTh[skillIdx].damageDetail.push({
+            damage: data.damage,
+            overkill_damage: data.overkill_damage,
+            damage_type: ParseAttackType(data.damage_type ? data.damage_type : data.type),
+        } as DamageDetailType)
         newTh[skillIdx].totalDamage += data.damage
         set({
             skillHistory: newTh,
@@ -130,6 +141,7 @@ const useBattleDataStore = create<BattleDataState>((set, get) => ({
             damagePerAV: (get().totalDamage + data.damage) / (get().totalAV === 0 ? 1 : get().totalAV)
         })
     },
+
     onTurnBeginService: (data: TurnBeginType) => {
         set((state) => ({
             totalAV: data.action_value,
@@ -142,14 +154,16 @@ const useBattleDataStore = create<BattleDataState>((set, get) => ({
             } as TurnBattleInfo]
         }))
     },
+
     onTurnEndService: (data: TurnEndType) => {
         set((state) => ({
             totalDamage: state.totalDamage === data.turn_info.total_damage ? data.turn_info.total_damage : state.totalDamage,
             currentAV: data.turn_info.action_value,
-            damagePerAV: (state.totalDamage === data.turn_info.total_damage ? data.turn_info.total_damage : state.totalDamage) 
-            / (data.turn_info.action_value === 0 ? 1 : data.turn_info.action_value)
+            damagePerAV: (state.totalDamage === data.turn_info.total_damage ? data.turn_info.total_damage : state.totalDamage)
+                / (data.turn_info.action_value === 0 ? 1 : data.turn_info.action_value)
         }));
     },
+
     onEntityDefeatedService: (data: EntityDefeatedType) => {
         let avatarDetail = get().avatarDetail
         let enemyDetail = get().enemyDetail
@@ -165,38 +179,38 @@ const useBattleDataStore = create<BattleDataState>((set, get) => ({
         } else if (data.killer.team === "Enemy" && avatarDetail[data.entity_defeated.uid]) {
             avatarDetail[data.entity_defeated.uid].isDie = true
             avatarDetail[data.entity_defeated.uid].killer_uid = data.killer.uid
-        } else {
-            console.error("onEntityDefeatedService", data)
-            console.error("onEntityDefeatedService", enemyDetail)
-            console.error("onEntityDefeatedService", avatarDetail)
         }
         set({
             avatarDetail: avatarDetail,
             enemyDetail: enemyDetail
         })
     },
+
     onUseSkillService: (data: UseSkillType) => {
         set((state) => ({
             skillHistory: [...state.skillHistory, {
                 avatarId: data.avatar.uid,
                 damageDetail: [],
                 totalDamage: 0,
-                skillType: data.skill.type,
+                skillType: ParseAttackType(data.skill.type),
                 skillName: data.skill.name,
-               turnBattleId: state.turnHistory.length-1
+                turnBattleId: state.turnHistory.length - 1
             } as SkillBattleInfo]
         }))
     },
+
     onUpdateWaveService: (data: UpdateWaveType) => {
         set({
             waveIndex: data.wave
         })
     },
+
     onUpdateCycleService: (data: UpdateCycleType) => {
         set({
             cycleIndex: data.cycle
         })
     },
+
     onStatChange: (data: StatChangeType) => {
         let avatarDetail = get().avatarDetail
         let enemyDetail = get().enemyDetail
@@ -206,8 +220,34 @@ const useBattleDataStore = create<BattleDataState>((set, get) => ({
         if (!avatarDetail) {
             avatarDetail = {} as Record<number, AvatarInfo>
         }
+
+        let key: string;
+        let value: number;
+        if (data.property) {
+            key = data.property.type;
+            value = data.property.value;
+        } else if (data.stat) {
+            if (
+                data.stat &&
+                typeof data.stat === 'object' &&
+                'type' in data.stat &&
+                'value' in data.stat &&
+                typeof data.stat.type === 'string'
+            ) {
+                key = data.stat.type;
+                value = Number(data.stat.value);
+            } else {
+                const entries = Object.entries(data.stat);
+                if (entries.length === 0) return;
+                [key, value] = entries[0] as [string, number];
+            }
+        } else {
+            return;
+        }
+
+        if (key === "CurrentHP") key = "HP";
+
         if (data.entity.team === "Player") {
-            const [key, value] = Object.entries(data.stat)[0]
             const uid = data.entity.uid;
 
             if (!avatarDetail[uid]) {
@@ -221,11 +261,10 @@ const useBattleDataStore = create<BattleDataState>((set, get) => ({
             }
             avatarDetail[uid].stats[key] = value
             avatarDetail[uid].statsHistory.push({
-                stats: data.stat,
-                turnBattleId: get().turnHistory.length-1
+                stats: { [key]: value },
+                turnBattleId: get().turnHistory.length - 1
             })
         } else {
-            const [key, value] = Object.entries(data.stat)[0]
             const uid = data.entity.uid;
 
             if (!enemyDetail[uid]) {
@@ -244,8 +283,8 @@ const useBattleDataStore = create<BattleDataState>((set, get) => ({
             }
             enemyDetail[uid].stats[key] = value
             enemyDetail[uid].statsHistory.push({
-                stats: data.stat,
-                turnBattleId: get().turnHistory.length-1
+                stats: { [key]: value },
+                turnBattleId: get().turnHistory.length - 1
             })
         }
         set({
@@ -267,7 +306,7 @@ const useBattleDataStore = create<BattleDataState>((set, get) => ({
         if (data.team === Team.Enemy) {
             for (let i = 0; i < data.entities.length; i++) {
                 const entity = data.entities[i];
-                if (entity.team === Team.Enemy && enemyDetail[entity.uid]) {
+                if (entity.team === Team.Enemy && enemyDetail?.[entity.uid]) {
                     enemyDetail[entity.uid].positionIndex = i
                     enemyDetail[entity.uid].waveIndex = get().waveIndex
                 }
@@ -280,20 +319,31 @@ const useBattleDataStore = create<BattleDataState>((set, get) => ({
             enemyDetail: enemyDetail
         })
     },
+
     onInitializeEnemyService: (data: InitializeEnemyType) => {
         const enemyDetail = get().enemyDetail
         if (!enemyDetail) {
             return
         }
+        let maxHP = 0;
+        let level = 0;
+        if ('properties' in data.enemy.base_stats) {
+            maxHP = data.enemy.base_stats.properties["MaxHP"] || 0;
+            level = data.enemy.base_stats.properties["Level"] || 0;
+        } else {
+            maxHP = data.enemy.base_stats.hp || data.enemy.base_stats.CurrentHP || 0;
+            level = data.enemy.base_stats.level;
+        }
+
         enemyDetail[data.enemy.uid] = {
             id: data.enemy.id,
             isDie: false,
             killer_uid: -1,
-            positionIndex: enemyDetail[data.enemy.uid].positionIndex,
-            waveIndex: enemyDetail[data.enemy.uid].waveIndex,
+            positionIndex: enemyDetail?.[data.enemy.uid]?.positionIndex || 0,
+            waveIndex: get().waveIndex,
             name: data.enemy.name,
-            maxHP: data.enemy.base_stats.hp,
-            level: data.enemy.base_stats.level,
+            maxHP: maxHP,
+            level: level,
             stats: {},
             statsHistory: []
         }
@@ -301,6 +351,7 @@ const useBattleDataStore = create<BattleDataState>((set, get) => ({
             enemyDetail: enemyDetail
         })
     },
+
     onBattleEndService: (data: BattleEndType) => {
         const lineups: AvatarBattleInfo[] = []
         for (const avatar of data.avatars) {

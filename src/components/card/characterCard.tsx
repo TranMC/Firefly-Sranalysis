@@ -42,9 +42,9 @@ export default function CharacterCard({ data }: CharacterCardProps) {
             height={48}
             unoptimized
             crossOrigin="anonymous"
-            src={`/icon/${data.damageType.toLowerCase()}.webp`}
+            src={`/icon/${data?.damageType?.toLowerCase()}.webp`}
             className="absolute top-0 left-0 w-6 h-6"
-            alt={data.damageType.toLowerCase()}
+            alt={data?.damageType?.toLowerCase()}
           />
           <Image
             width={48}

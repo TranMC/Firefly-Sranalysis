@@ -29,8 +29,8 @@ export default function LineupBar() {
     const totalTurn = useCalcTotalTurnAvatar(selectedCharacter ? Number(selectedCharacter.id) : 0)
 
 
-    const lineupAvatars = listAvatar.filter(item =>
-        lineup.some(av => av.avatarId.toString() === item.id)
+    const lineupAvatars = listAvatar?.filter(item =>
+        lineup?.some(av => av?.avatarId?.toString() === item.id)
     );
 
     const handleShow = (modalId: string, item: CharacterBasic) => {
@@ -103,7 +103,7 @@ export default function LineupBar() {
                 ) : (
                     <div className="h-full w-full overflow-x-auto md:overflow-x-hidden md:overflow-y-auto rounded-lg">
                         <div className="flex flex-nowrap md:grid md:grid-cols-1 w-fit md:w-full justify-items-center items-start gap-2">
-                            {lineupAvatars.map((item, index) => {
+                            {lineupAvatars?.map((item, index) => {
                                 const lastTurnAvatarId = turnHistory.findLast(i => i?.avatarId)?.avatarId || -1;
                                 const isLastTurn = item.id === lastTurnAvatarId.toString();
 
