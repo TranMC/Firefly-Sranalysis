@@ -147,28 +147,59 @@ const safeEnqueue = (name: keyof SocketEvents, data: unknown) => {
 };
 
 export const connectSocket = async (): Promise<Socket> => {
+    if (socket && socket.connected) {
+        console.log('✅ Socket already connected:', socket.id);
+        return socket;
+    }
+    if (socket) {
+        console.log('🔄 Closing old socket:', socket.id);
+        socket.disconnect();
+        await new Promise(resolve => setTimeout(resolve, 100));
+    }
+
     const { host, port, connectionType, setStatus } = useSocketStore.getState();
     let url = `${host}:${port}`;
     if (connectionType === "Native") url = "http://localhost:1305";
     else if (connectionType === "PS") url = "http://localhost:21000";
 
-    if (socket) socket.disconnect();
+    console.log('🔌 Creating new socket connection to:', url);
 
     socket = io(url, {
         reconnectionAttempts: 5,
         timeout: 10000,
         autoConnect: true,
+        reconnectionDelay: 1000,           
+        reconnectionDelayMax: 5000,      
+        pingInterval: 30000,           
+        pingTimeout: 10000,       
+        forceNew: false,                
     });
 
     socket.on("connect", () => {
+        console.log('✅ Socket connected:', socket?.id);
         setStatus(true);
         notify(`Connected: ${socket?.id}`, "success");
     });
 
-    socket.on("disconnect", () => setStatus(false));
-    socket.on("connect_error", () => setStatus(false));
-    socket.on("connect_timeout", () => setStatus(false));
-    socket.on("reconnect_failed", () => setStatus(false));
+    socket.on("disconnect", (reason) => {
+        console.log('❌ Socket disconnected:', reason);
+        setStatus(false);
+    });
+    
+    socket.on("connect_error", (error) => {
+        console.log('⚠️ Connect error:', error);
+        setStatus(false);
+    });
+    
+    socket.on("connect_timeout", () => {
+        console.log('⏱️ Connect timeout');
+        setStatus(false);
+    });
+    
+    socket.on("reconnect_failed", () => {
+        console.log('❌ Reconnect failed');
+        setStatus(false);
+    });
 
     listeners = {
         Connected: (payload) => useBattleDataStore.getState().onConnectedService(payload),
@@ -221,7 +252,13 @@ export const connectSocket = async (): Promise<Socket> => {
 };
 
 export const disconnectSocket = (): void => {
-    if (!socket) return;
+    if (!socket) {
+        console.log('⚠️ No socket to disconnect');
+        return;
+    }
+    
+    console.log('🔌 Disconnecting socket:', socket.id);
+    
     if (listeners) {
         Object.keys(listeners).forEach((eventName) => {
             socket?.off(eventName);
@@ -240,6 +277,9 @@ export const disconnectSocket = (): void => {
     }
     pendingMap.clear();
     eventQueue = [];
+    socket = null;
+    
+    console.log('✅ Socket cleanup complete');
 };
 
 export const isSocketConnected = (): boolean => socket?.connected || false;

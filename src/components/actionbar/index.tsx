@@ -7,7 +7,7 @@ import { SkillBattleInfo } from "@/types/mics";
 import { useEffect, useState, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
-import { getNameChar } from "@/helper";
+import { getNameChar, formatNumber } from "@/helper";
 import Image from "next/image";
 import NameAvatar from "../nameAvatar";
 
@@ -142,10 +142,10 @@ export default function ActionBar() {
                                                 {`${transI18n("useSkill")}: ${transI18n(attackTypeToString(turn.skillType).toLowerCase())}`}
                                             </div>
                                             <div className="text-primary text-xs max-w-full">
-                                                {`${transI18n("totalDamage")}: ${Number(turn.totalDamage).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}`}
+                                                {`${transI18n("totalDamage")}: ${formatNumber(turn.totalDamage, 1)}`}
                                             </div>
                                             <div className="text-primary text-xs max-w-full">
-                                                {`${transI18n("actionValue")}: ${Number(turnHistory[turn.turnBattleId]?.actionValue || 0).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}`}
+                                                {`${transI18n("actionValue")}: ${formatNumber(turnHistory[turn.turnBattleId]?.actionValue || 0, 1)}`}
                                             </div>
                                         </div>
                                     </div>
@@ -241,11 +241,11 @@ export default function ActionBar() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                 <div className="bg-base-200 rounded-lg p-4 shadow-md">
                                     <h4 className="text-lg font-semibold mb-2 text-cyan-500 border-b border-cyan-300/30 pb-1">{transI18n("actionValue")}</h4>
-                                    <p className="mt-2">{Number(turnHistory[selectTurn?.turnBattleId].actionValue).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</p>
+                                    <p className="mt-2">{formatNumber(turnHistory[selectTurn?.turnBattleId].actionValue, 1)}</p>
                                 </div>
                                 <div className="bg-base-200 rounded-lg p-4 shadow-md">
                                     <h4 className="text-lg font-semibold mb-2 text-purple-500 border-b border-purple-300/30 pb-1">{transI18n("totalDamage")}</h4>
-                                    <p className="mt-2 font-bold text-lg">{Number(selectTurn?.totalDamage).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</p>
+                                    <p className="mt-2 font-bold text-lg">{formatNumber(selectTurn?.totalDamage || 0, 1)}</p>
                                 </div>
                             </div>
 
@@ -259,7 +259,7 @@ export default function ActionBar() {
                                                 className="flex flex-col items-start gap-1 p-3 rounded-lg shadow bg-base-200"
                                             >
                                                 <span className="text-lg font-semibold text-primary">
-                                                    {Number(detail.damage).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
+                                                    {formatNumber(detail.damage, 1)}
                                                 </span>
                                                 <span className="text-xs uppercase text-gray-500 tracking-wide">
                                                     {transI18n(attackTypeToString(detail?.damage_type).toLowerCase())}

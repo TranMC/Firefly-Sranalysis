@@ -8,6 +8,10 @@ export function useDamageLinesForAll(mode: 1 | 2 = 1) {
     const avatarMap = new Map<number, Map<number, number>>();
 
     for (const skill of skillHistory) {
+      if (!turnHistory[skill.turnBattleId]) {
+        continue;
+      }
+
       if (!avatarMap.has(skill.avatarId)) {
         avatarMap.set(skill.avatarId, new Map());
       }

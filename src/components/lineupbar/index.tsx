@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { useState, useEffect } from "react";
 import { CharacterBasic } from "@/types";
 import useLocaleStore from "@/stores/localeStore";
-import { getNameChar } from '@/helper/getNameChar';
+import { getNameChar, formatNumber } from '@/helper';
 import SkillBarChart from "../chart/skillBarChart";
 import SkillPieChart from "../chart/skillPieChart";
 import { motion } from "framer-motion";
@@ -265,10 +265,10 @@ export default function LineupBar() {
                                     <ShowCaseInfo></ShowCaseInfo>
                                 </div> */}
                                 <div className="bg-base-200 rounded-lg p-4 shadow-md">
-                                    <p className="mt-2 font-bold text-lg text-cyan-500">{transI18n("totalTurn")}: <span className="text-base-content">{Number(totalTurn).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</span></p>
+                                    <p className="mt-2 font-bold text-lg text-cyan-500">{transI18n("totalTurn")}: <span className="text-base-content">{formatNumber(totalTurn, 1)}</span></p>
                                 </div>
                                 <div className="bg-base-200 rounded-lg p-4 shadow-md">
-                                    <h4 className="text-lg font-semibold mb-2 text-purple-500">{transI18n("totalDamage")}: <span className="text-base-content">{Number(totalDamage).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</span></h4>
+                                    <h4 className="text-lg font-semibold mb-2 text-purple-500">{transI18n("totalDamage")}: <span className="text-base-content">{formatNumber(totalDamage, 1)}</span></h4>
                                 </div>
 
                                 <div className="bg-base-200 rounded-lg p-4 shadow-md">

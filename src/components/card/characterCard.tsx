@@ -1,6 +1,6 @@
 "use client";
 
-import { getNameChar } from '@/helper';
+import { getNameChar, formatNumber } from '@/helper';
 import useLocaleStore from '@/stores/localeStore';
 import { CharacterBasic } from '@/types';
 import NameAvatar from '../nameAvatar';
@@ -69,11 +69,11 @@ export default function CharacterCard({ data }: CharacterCardProps) {
             <span className="text-xs text-base-content/70 mx-1">HP:</span>
             <span className="text-xs font-medium">
               <span className="text-error">
-                {Number(avatarDetail?.[Number(data.id)]?.stats?.HP ?? 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                {formatNumber(avatarDetail?.[Number(data.id)]?.stats?.HP ?? 0, 0)}
               </span>
               <span className="text-base-content/50">/</span>
               <span className="text-base-content/70">
-                {Number(avatarDetail?.[Number(data.id)]?.stats?.MaxHP ?? 100).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                {formatNumber(avatarDetail?.[Number(data.id)]?.stats?.MaxHP ?? 100, 0)}
               </span>
             </span>
           </div>
@@ -89,7 +89,6 @@ export default function CharacterCard({ data }: CharacterCardProps) {
               {Math.round(((avatarDetail?.[Number(data.id)]?.stats?.HP || 0) / (avatarDetail?.[Number(data.id)]?.stats?.MaxHP || 100)) * 100)}%
             </span>
           </div>
-
         </div>
       )}
 

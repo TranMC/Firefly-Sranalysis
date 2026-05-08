@@ -75,27 +75,26 @@ export default function Header() {
         const intervalId = setInterval(checkStatus, 5000);
 
         return () => clearInterval(intervalId);
-    }, [status, setStatus]);
+    }, []); 
 
 
     useEffect(() => {
-        const socket = getSocket();
-
-        if (!socket) return;
-
         return () => {
-            disconnectSocket()
+            disconnectSocket();
         };
     }, []);
 
-    const handleConnect = () => {
+    const handleConnect = async () => {
         if (!host || !port) {
             setMessage({ text: 'IP and Port are required', type: 'error' });
             return;
         }
-        connectSocket();
-
-        setTimeout(() => {
+        
+        try {
+            await connectSocket();
+            
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            
             const connected = isSocketConnected();
             setStatus(connected);
 
@@ -104,7 +103,10 @@ export default function Header() {
             } else {
                 setMessage({ text: 'Failed to connect. Please check IP and port.', type: 'error' });
             }
-        }, 2000);
+        } catch (error) {
+            console.error('Connection error:', error);
+            setMessage({ text: 'Connection error occurred', type: 'error' });
+        }
     };
 
     const checkConnection = async () => {
@@ -131,7 +133,6 @@ export default function Header() {
         }
     };
 
-    // Close modal handler
     const handleCloseModal = (modalId: string) => {
         setIsModalOpen(false);
         const modal = document.getElementById(modalId) as HTMLDialogElement | null;
@@ -140,7 +141,6 @@ export default function Header() {
         }
     };
 
-    // Handle ESC key to close modal
     useEffect(() => {
         const handleEscKey = (event: KeyboardEvent) => {
             if (event.key === 'Escape' && isModalOpen) {

@@ -3,7 +3,7 @@
 import useBattleDataStore from "@/stores/battleDataStore";
 import Image from "next/image";
 import useAvatarDataStore from "@/stores/avatarDataStore";
-import { getNameEnemy } from "@/helper/getNameChar";
+import { getNameEnemy, formatNumber } from "@/helper";
 
 import useLocaleStore from "@/stores/localeStore";
 import NameAvatar from "../nameAvatar";
@@ -49,11 +49,11 @@ export default function EnemyBar() {
                                     <div className="text-xs text-base-content/70">HP:</div>
                                     <div className="flex text-xs font-medium">
                                         <div className="text-error">
-                                            {Number(enemy?.stats?.HP ?? 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                            {formatNumber(enemy?.stats?.HP ?? 0, 0)}
                                         </div>
                                         <div className="text-base-content/50 mx-1">/</div>
                                         <div className="text-base-content/70">
-                                            {Number(enemy?.maxHP ?? 100).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                            {formatNumber(enemy?.maxHP ?? 100, 0)}
                                         </div>
                                     </div>
                                 </div>
