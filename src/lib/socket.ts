@@ -175,10 +175,6 @@ export const connectSocket = async (): Promise<Socket> => {
         autoConnect: true,
         forceNew: false,
         transports: ['websocket', 'polling'],  // Thử websocket trước, rồi polling
-        
-        // Socket.io engine config
-        pingInterval: 25000,             // Ping mỗi 25s (thay vì 30s)
-        pingTimeout: 20000,              // Timeout ping là 20s (thay vì 10s)
     });
 
     socket.on("connect", () => {
