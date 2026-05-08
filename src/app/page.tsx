@@ -13,6 +13,7 @@ import DamagePercentChartForAll from "@/components/chart/damagePercentForAll";
 import EnemyBar from "@/components/enemybar";
 import { CharacterBasic, MonsterBasic } from "@/types";
 import { formatNumber } from "@/helper";
+import StatsDisplay from "@/components/stats/statsDisplay";
 
 export default function Home() {
   const transI18n = useTranslations("DataAnalysisPage");
@@ -68,24 +69,12 @@ export default function Home() {
 
           <div className="col-span-12 md:col-span-6 lg:col-span-8 xl:col-span-8 max-h-[92vh] flex flex-col h-full overflow-auto ">
 
-            <div className="grid grid-cols-2 gap-2 mb-3">
-              <div className="p-2 text-base lg:text-lg xl:text-xl rounded bg-primary text-primary-content text-center shadow-md">
-                {transI18n("totalDamage")}
-                <div>{formatNumber(totalDamage, 1)}</div>
-              </div>
-              <div className="p-2 text-base lg:text-lg xl:text-xl rounded bg-secondary text-secondary-content text-center shadow-md">
-                {transI18n("totalAV")}
-                <div>{formatNumber(totalAV, 1)}</div>
-              </div>
-              <div className="p-2 text-base lg:text-lg xl:text-xl rounded bg-accent text-accent-content text-center shadow-md">
-                {transI18n("damagePerAV")}
-                <div>{formatNumber(damagePerAV, 1)}</div>
-              </div>
-              <div className="p-2 text-base lg:text-lg xl:text-xl rounded bg-warning text-warning-content text-center shadow-md">
-                {transI18n("totalTurn")}
-                <div>{turnHistory.filter(it => it.avatarId && it.avatarId != -1).length}</div>
-              </div>
-            </div>
+            <StatsDisplay 
+              totalDamage={totalDamage}
+              totalAV={totalAV}
+              damagePerAV={damagePerAV}
+              totalTurn={turnHistory.filter(it => it.avatarId && it.avatarId != -1).length}
+            />
             {enemyDetail && <EnemyBar />}
 
             <div className="rounded-lg p-2 shadow-md grow">

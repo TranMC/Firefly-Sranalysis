@@ -7,6 +7,7 @@ import Footer from "@/components/footer";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import { ToastContainer } from 'react-toastify';
+import SocketDebugPanel from "@/components/debug/socketDebugPanel";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -70,6 +71,7 @@ export default async function RootLayout({
                 <Header></Header>
                 {children}
                 <Footer></Footer>
+                <SocketDebugPanel />
               </div>
             </ClientThemeWrapper>
           </ThemeProvider>

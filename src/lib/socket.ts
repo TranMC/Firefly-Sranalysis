@@ -21,6 +21,8 @@ import type {
 } from "@/types";
 
 let socket: Socket | null = null;
+let reconnectCount = 0;
+let lastDisconnectTime = 0;
 
 const notify = (msg: string, type: "info" | "success" | "error" = "info") => {
     if (type === "success") toast.success(msg);
@@ -93,7 +95,7 @@ const parseWithWorker = (raw: unknown): Promise<{ parsed: unknown | null; err?: 
         const timeout = setTimeout(() => {
             pendingMap.delete(id);
             resolve({ parsed: null, err: "worker timeout" });
-        }, 3000);
+        }, 10000);
 
         pendingMap.set(id, (res) => {
             clearTimeout(timeout);
@@ -165,25 +167,68 @@ export const connectSocket = async (): Promise<Socket> => {
     console.log('🔌 Creating new socket connection to:', url);
 
     socket = io(url, {
-        reconnectionAttempts: 5,
-        timeout: 10000,
+        reconnection: true,
+        reconnectionAttempts: Infinity,  // Thử reconnect vô hạn
+        reconnectionDelay: 500,          // Bắt đầu từ 0.5s
+        reconnectionDelayMax: 30000,     // Tối đa 30s (exponential backoff)
+        timeout: 20000,                  // Tăng timeout từ 10s → 20s
         autoConnect: true,
-        reconnectionDelay: 1000,           
-        reconnectionDelayMax: 5000,      
-        pingInterval: 30000,           
-        pingTimeout: 10000,       
-        forceNew: false,                
+        forceNew: false,
+        transports: ['websocket', 'polling'],  // Thử websocket trước, rồi polling
+        
+        // Socket.io engine config
+        pingInterval: 25000,             // Ping mỗi 25s (thay vì 30s)
+        pingTimeout: 20000,              // Timeout ping là 20s (thay vì 10s)
     });
 
     socket.on("connect", () => {
+        reconnectCount = 0;
         console.log('✅ Socket connected:', socket?.id);
         setStatus(true);
         notify(`Connected: ${socket?.id}`, "success");
     });
 
     socket.on("disconnect", (reason) => {
+        lastDisconnectTime = Date.now();
         console.log('❌ Socket disconnected:', reason);
         setStatus(false);
+        
+        // Log disconnect reason chi tiết
+        const reasons: Record<string, string> = {
+            'io server disconnect': 'Server đóng kết nối',
+            'io client disconnect': 'Client đóng kết nối',
+            'transport close': 'Transport đóng (có thể server hoặc network)',
+            'transport error': 'Lỗi transport (network)',
+            'parse error': 'Lỗi parse dữ liệu',
+            'ping response timeout': 'Ping timeout - mất kết nối',
+        };
+        
+        console.log('📊 Disconnect reason:', reasons[reason] || reason);
+        
+        // Nếu disconnect do client hoặc server action, không reconnect
+        if (reason === 'io client disconnect' || reason === 'io server disconnect') {
+            console.log('⏸️ Intentional disconnect, stopping reconnect');
+        }
+    });
+    
+    socket.on("reconnect_attempt", (attempt) => {
+        reconnectCount = (attempt as number) || (reconnectCount + 1);
+        console.log(`🔄 Reconnect attempt #${reconnectCount}...`);
+    });
+    
+    socket.on("reconnect", () => {
+        console.log(`✅ Reconnected after ${reconnectCount} attempts`);
+        reconnectCount = 0;
+        setStatus(true);
+        notify(`Reconnected: ${socket?.id}`, "success");
+    });
+    
+    socket.on("reconnect_error", (error) => {
+        console.log('⚠️ Reconnect error:', error);
+    });
+    
+    socket.on("reconnect_failed", () => {
+        console.log('❌ Reconnect failed - giving up');
     });
     
     socket.on("connect_error", (error) => {
@@ -283,6 +328,28 @@ export const disconnectSocket = (): void => {
 };
 
 export const isSocketConnected = (): boolean => socket?.connected || false;
+
+export const getReconnectStatus = () => {
+    return {
+        connected: socket?.connected || false,
+        reconnectCount,
+        lastDisconnectTime,
+        timeSinceLastDisconnect: lastDisconnectTime ? Date.now() - lastDisconnectTime : null,
+        socketId: socket?.id,
+    };
+};
+
+export const getSocketDebugInfo = () => {
+    return {
+        isConnected: socket?.connected || false,
+        socketId: socket?.id,
+        reconnectCount,
+        lastDisconnect: new Date(lastDisconnectTime).toLocaleTimeString(),
+        eventQueueLength: eventQueue.length,
+        pendingParseRequests: pendingMap.size,
+        workerPoolSize: workerPool?.length || 0,
+    };
+};
 export const getSocket = (): Socket | null => socket;
 
 export const setWorkerPoolSize = (size: number) => {

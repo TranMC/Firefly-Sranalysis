@@ -64,30 +64,29 @@ export default function CharacterCard({ data }: CharacterCardProps) {
         className="mt-2 text-center text-base font-normal leading-tight"
       />
       {avatarDetail && (
-        <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            <span className="text-xs text-base-content/70 mx-1">HP:</span>
-            <span className="text-xs font-medium">
-              <span className="text-error">
-                {formatNumber(avatarDetail?.[Number(data.id)]?.stats?.HP ?? 0, 0)}
+        <div className="space-y-3 w-full mt-2">
+          {/* HP Display */}
+          <div className="bg-gradient-to-r from-red-600/10 to-red-500/5 border border-red-400/30 rounded-lg p-2">
+            <div className="flex justify-between items-center mb-1">
+              <span className="text-xs font-semibold text-red-600">❤️ HP</span>
+              <span className="text-xs font-bold text-red-500">
+                {Math.round(((avatarDetail?.[Number(data.id)]?.stats?.HP || 0) / (avatarDetail?.[Number(data.id)]?.stats?.MaxHP || 100)) * 100)}%
               </span>
-              <span className="text-base-content/50">/</span>
-              <span className="text-base-content/70">
-                {formatNumber(avatarDetail?.[Number(data.id)]?.stats?.MaxHP ?? 100, 0)}
-              </span>
-            </span>
-          </div>
-
-          <div className="relative w-full bg-base-300 rounded-full h-2.5">
-            <div
-              className="bg-error h-2.5 rounded-full transition-all duration-300"
-              style={{
-                width: `${Math.max(0, Math.min(100, ((avatarDetail?.[Number(data.id)]?.stats?.HP || 0) / (avatarDetail?.[Number(data.id)]?.stats?.MaxHP || 100)) * 100))}%`
-              }}
-            />
-            <span className="absolute inset-0 flex items-center justify-center text-xs text-white font-medium">
-              {Math.round(((avatarDetail?.[Number(data.id)]?.stats?.HP || 0) / (avatarDetail?.[Number(data.id)]?.stats?.MaxHP || 100)) * 100)}%
-            </span>
+            </div>
+            <div className="relative w-full bg-base-300/50 rounded-full h-3 overflow-hidden border border-base-300/50">
+              <div
+                className="bg-gradient-to-r from-red-500 to-red-400 h-3 rounded-full transition-all duration-500"
+                style={{
+                  width: `${Math.max(0, Math.min(100, ((avatarDetail?.[Number(data.id)]?.stats?.HP || 0) / (avatarDetail?.[Number(data.id)]?.stats?.MaxHP || 100)) * 100))}%`
+                }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-20" />
+            </div>
+            <div className="mt-1 text-xs text-base-content/60 text-right font-mono">
+              <span className="text-red-500 font-semibold">{formatNumber(avatarDetail?.[Number(data.id)]?.stats?.HP ?? 0, 0)}</span>
+              <span className="text-base-content/40"> / </span>
+              <span>{formatNumber(avatarDetail?.[Number(data.id)]?.stats?.MaxHP ?? 100, 0)}</span>
+            </div>
           </div>
         </div>
       )}
