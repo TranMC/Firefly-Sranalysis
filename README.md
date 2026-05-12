@@ -15,8 +15,8 @@ The application is deployed and available at the following URLs:
 
 | Role | URL |
 | :--- | :--- |
-| **Main Site** | [sranalysis.kain.id.vn](https://sranalysis.kain.id.vn) |
-| **Backup / Vercel Mirror** | [firefly-sranalysis.vercel.app](https://firefly-sranalysis.vercel.app) |
+| **Main Site** | [tranmc.id.vn](https://www.tranmc.id.vn/) |
+| **Backup / Vercel Mirror** | [firefly-sranalysis-lemon.vercel.app](https://firefly-sranalysis-lemon.vercel.app/) |
 
 ---
 
